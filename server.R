@@ -3,31 +3,14 @@ library(shiny)
 library (tidyverse)
 library (plotly)
 
-# source ("getdata.R")
-dat = readr::read_csv("temp_covid_cases.csv",
-                      col_names = c("date",
-                                    "canton",
-                                    "inc_canton",
-                                    "7dayinc_canton",
-                                    "plymouth city",
-                                    "inc_plycity",
-                                    "7dayinc_plycity",
-                                    "plymouth twsp",
-                                    "inc_plytown",
-                                    "7dayinc_plytown",
-                                    "cases_combo",
-                                    "inc_combo",
-                                    "7dayinc_combo" ),
-                      col_types = "cdddddddddddd",
-                      skip=1,
-                      na = ".") %>%
-  mutate (date = as.Date(date, format = c("%m/%d"))) %>%
-  select (date, '7dayinc_canton', '7dayinc_plycity','7dayinc_plytown')%>%
-  pivot_longer (!date, names_to = "region", values_to = "count") 
+source ("getdata.R")
 
 
 
 server <- function(input, output) {
+  
+  
+  
   refreshdat <- reactive ({
     req(input$daterange1)
     dat %>%
@@ -77,7 +60,7 @@ server <- function(input, output) {
       )
     
     plot_ly (data = refreshdat(), x = ~date, y = ~count, type = "scatter", mode = "lines", linetype = ~region,
-             line = list (color = c('#e90003','#1B9E77','#7570B3')),
+             line = list (color = c('#e90003','#1B9E77','#7570B3','#AAAAAA')),
              yaxis = list (title = 'Incidence\n7-day average (cases/million/day)')) %>%
       layout (shapes = list( hline(40, "8b96c9"), hline (70, "8d6cb0"), hline (150, "8a419e")),
               xaxis = list(title = "Date"), 
@@ -91,10 +74,17 @@ server <- function(input, output) {
   
   output$downloadData <- downloadHandler(
     filename = function() {
-      paste(input$dataset, ".csv", sep = "")
+      paste("cantonplymouth.csv", sep = "")
     },
     content = function(file) {
-      write.csv(datasetInput(), file, row.names = FALSE)
+      todownload = as.data.frame(refreshdat())%>% 
+        pivot_wider (
+          id_cols = "date",
+          names_from = "region",
+          values_from = "count"
+        )
+      
+      write.csv(todownload, file, row.names = FALSE)
     }
   )
   
@@ -103,6 +93,27 @@ server <- function(input, output) {
     
     
   })
+
+    output$datelastupdated <- renderText ({
+    "Last Updated 2020-11-15"
+    
+    
+  })
+  output$aboutpage <- renderUI ({
+      str1 <- paste("about the project")
+      str2 <- paste("contact info")
+      HTML(paste(str1, str2, sep = '<br/>'))
+    
+    
+  })
+  output$helppage <- renderUI ({
+      str1 <- paste("FAQs")
+      str2 <- paste("troubleshooting")
+      HTML(paste(str1, str2, sep = '<br/>'))
+    
+    
+  })
+
   
   
 }
