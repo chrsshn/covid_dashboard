@@ -11,10 +11,12 @@ server <- function(input, output) {
   
   
   
-  refreshdat <- reactive ({
+  selected_data_points <- reactive ({
     req(input$daterange1)
-    dat %>%
-      filter (date <= as.Date(input$daterange1[2]) & date >= as.Date(input$daterange1[1]))
+    dat_7dayincidences %>%
+      filter (date <= as.Date(input$daterange1[2]) & date >= as.Date(input$daterange1[1]),
+              region %in% input$regionsavailable) 
+
     
   }) 
   
@@ -33,6 +35,13 @@ server <- function(input, output) {
         line = list(color = color)
       )
     }
+    
+    l <- list(
+      bordercolor = "#111111",
+      borderwidth = 1,
+      x = 0.03, 
+      y = 0.96,
+      title=list(text='<b> Region </b>'))
       
       date_range_print <- list(
         text = paste ("Dates:",as.Date(input$daterange1[1]),"to", as.Date(input$daterange1[2])),
@@ -41,7 +50,7 @@ server <- function(input, output) {
         yanchor = "bottom",
         xanchor = "center",
         align = "center",
-        x = 0.565,
+        x = 0.47,
         y = .96,
         showarrow = FALSE
       )
@@ -54,18 +63,18 @@ server <- function(input, output) {
         yanchor = "bottom",
         xanchor = "center",
         align = "center",
-        x = 0.564,
+        x = 0.47,
         y = .9,
         showarrow = FALSE
       )
     
-      plot_ly (data = refreshdat(), 
+      plot_ly (data = selected_data_points(), 
                x = ~date, 
                y = ~count, 
                type = "scatter", 
                mode = "lines", 
-               linetype = ~region, 
-               linetypes = c('dash','dot','dotdash','solid'),
+               linetype = ~I(linetype),
+               # linetypes = c('dash','dot','dotdash','solid'),
                color = ~region,
                colors = c('#e90003','#1B9E77','#7570B3','#AAAAAA'),
                yaxis = list (title = 'Incidence\n7-day average (cases/million/day)')) %>%
@@ -73,9 +82,10 @@ server <- function(input, output) {
               xaxis = list(title = "Date"), 
               yaxis = list(title = "Incidence\n7-day average (cases/million/day)"),
               title =  "Plymouth & Canton Incidence",
-              annotations = list(date_range_print, time_frame_print)
+              annotations = list(date_range_print, time_frame_print),
+              legend = l,
+              showlegend = T)
               
-      )
     
   })
   
@@ -84,7 +94,7 @@ server <- function(input, output) {
       paste("cantonplymouth.csv", sep = "")
     },
     content = function(file) {
-      todownload = as.data.frame(refreshdat())%>% 
+      todownload = as.data.frame(selected_data_points())%>% 
         pivot_wider (
           id_cols = "date",
           names_from = "region",
@@ -102,7 +112,7 @@ server <- function(input, output) {
   })
 
     output$datelastupdated <- renderText ({
-    "Last Updated 2020-11-15"
+    "Data Last Updated 2020-11-17"
     
     
   })

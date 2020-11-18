@@ -11,10 +11,10 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       dateRangeInput("daterange1", "Date range:",
-                     start = Sys.Date() - 28,
-                     end = Sys.Date(),
+                     start = "2020-10-10",
+                     end = "2020-11-07",
                      min = "2020-08-19",
-                     max   = "2020-11-17"),
+                     max   = "2020-11-07"),
       checkboxGroupInput("regionsavailable","Regions Available:",regions, selected = regions),
       
       
