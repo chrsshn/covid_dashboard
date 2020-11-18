@@ -19,6 +19,7 @@ ui <- fluidPage(
       
       
       downloadButton("downloadData", "Download"),
+      textOutput("datelastupdated")
       # textOutput("test")
     ),
     
@@ -28,8 +29,7 @@ ui <- fluidPage(
       tabsetPanel(type = "tabs",
                   tabPanel("Plot", plotlyOutput("distPlot")),
                   tabPanel("About Page", htmlOutput("aboutpage")),
-                  tabPanel("Help", htmlOutput("helppage"))),
-      textOutput("datelastupdated")
+                  tabPanel("Help", htmlOutput("helppage")))
       
       
       

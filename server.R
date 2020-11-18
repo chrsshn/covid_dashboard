@@ -3,6 +3,7 @@ library(shiny)
 library (tidyverse)
 library (plotly)
 
+
 source ("getdata.R")
 
 
@@ -15,7 +16,7 @@ server <- function(input, output) {
     req(input$daterange1)
     dat_7dayincidences %>%
       filter (date <= as.Date(input$daterange1[2]) & date >= as.Date(input$daterange1[1]),
-              region %in% input$regionsavailable) 
+              as.character (region) %in% input$regionsavailable)
 
     
   }) 
@@ -71,12 +72,13 @@ server <- function(input, output) {
       plot_ly (data = selected_data_points(), 
                x = ~date, 
                y = ~count, 
+               name = ~as.factor(region),
                type = "scatter", 
                mode = "lines", 
                linetype = ~I(linetype),
                # linetypes = c('dash','dot','dotdash','solid'),
-               color = ~region,
-               colors = c('#e90003','#1B9E77','#7570B3','#AAAAAA'),
+               color = ~I(color),
+               # colors = c('#e90003','#1B9E77','#7570B3','#AAAAAA'),
                yaxis = list (title = 'Incidence\n7-day average (cases/million/day)')) %>%
       layout (shapes = list( hline(40, "8b96c9"), hline (70, "8d6cb0"), hline (150, "8a419e")),
               xaxis = list(title = "Date"), 
@@ -106,7 +108,7 @@ server <- function(input, output) {
   )
   
   output$test <- renderPrint ({
-    # refreshdat()
+    str (selected_data_points())
     
     
   })
@@ -117,15 +119,15 @@ server <- function(input, output) {
     
   })
   output$aboutpage <- renderUI ({
-      str1 <- paste("about the project")
-      str2 <- paste("contact info")
+      str1 <- paste("Data derived from daily, municipality-level case reports from Wayne County Health Department. Data represent cases confirmed for each date (i.e., cases are associated with the date of confirmation, not date of symptom onset or specimen collection).")
+      str2 <- paste("Contact Emily Somers (emsomers@med.umich.edu) or Kaitlyn Akel (kbakel@umich.edu) for more information about the project")
       HTML(paste(str1, str2, sep = '<br/>'))
     
     
   })
   output$helppage <- renderUI ({
-      str1 <- paste("FAQs")
-      str2 <- paste("troubleshooting")
+      str1 <- paste("FAQs coming soon")
+      str2 <- paste("Contact Chris Shin (shincd@umich.edu) for additional help")
       HTML(paste(str1, str2, sep = '<br/>'))
     
     

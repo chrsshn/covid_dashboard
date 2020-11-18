@@ -1,3 +1,11 @@
+library (zoo)
+library (tidyverse)
+
+denoms = readr::read_csv ("denominators.csv",
+                          col_names = c("region", "population"),
+                          col_types = "cd")
+
+
 dat_all = readr::read_csv("covid_cases_20201108.csv",
                       col_names = c("date",
                                     "canton_cases",
@@ -27,9 +35,8 @@ dat_7dayincidences = dat_all %>%
           'Plymouth City' = plymouth_city_7day,
           'Plymouth Township' = plymouth_township_7day,
           'Combined' = combined_7day) %>%
-  pivot_longer (!date, names_to = "region", values_to = "count") %>%
-  mutate (region = factor (region, levels = c ("Canton", "Plymouth City", "Plymouth Township", "Combined"))) %>%
-  arrange (region) 
+  pivot_longer (!date, names_to = "region", values_to = "count") %>% 
+  mutate (region = factor (region, levels = c ("Canton", "Plymouth City", "Plymouth Township", "Combined"))) 
 
 
 
