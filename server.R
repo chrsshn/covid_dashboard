@@ -59,9 +59,16 @@ server <- function(input, output) {
         showarrow = FALSE
       )
     
-    plot_ly (data = refreshdat(), x = ~date, y = ~count, type = "scatter", mode = "lines", linetype = ~region,
-             line = list (color = c('#e90003','#1B9E77','#7570B3','#AAAAAA')),
-             yaxis = list (title = 'Incidence\n7-day average (cases/million/day)')) %>%
+      plot_ly (data = refreshdat(), 
+               x = ~date, 
+               y = ~count, 
+               type = "scatter", 
+               mode = "lines", 
+               linetype = ~region, 
+               linetypes = c('dash','dot','dotdash','solid'),
+               color = ~region,
+               colors = c('#e90003','#1B9E77','#7570B3','#AAAAAA'),
+               yaxis = list (title = 'Incidence\n7-day average (cases/million/day)')) %>%
       layout (shapes = list( hline(40, "8b96c9"), hline (70, "8d6cb0"), hline (150, "8a419e")),
               xaxis = list(title = "Date"), 
               yaxis = list(title = "Incidence\n7-day average (cases/million/day)"),
