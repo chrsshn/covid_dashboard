@@ -21,6 +21,8 @@ server <- function(input, output) {
     
   }) 
   
+
+  
   output$distPlot <- renderPlotly({
     
     
@@ -40,8 +42,8 @@ server <- function(input, output) {
     l <- list(
       bordercolor = "#111111",
       borderwidth = 1,
-      x = 0.03, 
-      y = 0.96,
+      x = 0.08, 
+      y = 1,
       title=list(text='<b> Region </b>'))
       
       date_range_print <- list(
@@ -52,7 +54,7 @@ server <- function(input, output) {
         xanchor = "center",
         align = "center",
         x = 0.47,
-        y = .96,
+        y = 1.03,
         showarrow = FALSE
       )
     
@@ -65,10 +67,11 @@ server <- function(input, output) {
         xanchor = "center",
         align = "center",
         x = 0.47,
-        y = .9,
+        y = .98,
         showarrow = FALSE
       )
     
+      #get min value and choose which hlines to show
       plot_ly (data = selected_data_points(), 
                x = ~date, 
                y = ~count, 
@@ -80,13 +83,26 @@ server <- function(input, output) {
                color = ~I(color),
                # colors = c('#e90003','#1B9E77','#7570B3','#AAAAAA'),
                yaxis = list (title = 'Incidence\n7-day average (cases/million/day)')) %>%
-      layout (shapes = list( hline(40, "8b96c9"), hline (70, "8d6cb0"), hline (150, "8a419e")),
+      layout (shapes = list( hline(7, "bed4e6"),
+                             hline(20, "a0bddc"),
+                             hline(40, "8b96c9"), 
+                             hline (70, "8d6cb0"), 
+                             hline (150, "8a419e")),
               xaxis = list(title = "Date"), 
               yaxis = list(title = "Incidence\n7-day average (cases/million/day)"),
               title =  "Plymouth & Canton Incidence",
               annotations = list(date_range_print, time_frame_print),
               legend = l,
-              showlegend = T)
+              showlegend = T,
+              # images = list(
+              #   source = base64enc::dataURI(file = "risk_levels_with_values.png"),
+              #   x = .8, y = .8, 
+              #   sizex = 1, sizey = 1,
+              #   xref = "x", yref = "y",
+              #   xanchor = "left", yanchor = "bottom",
+              #   sizing = "stretch"
+              # ),
+              margin = list(t = 60))
               
     
   })
@@ -114,14 +130,20 @@ server <- function(input, output) {
   })
 
     output$datelastupdated <- renderText ({
-    "Data Last Updated 2020-11-17"
+    paste ("The data was last updated on 2020-11-07")
     
     
   })
   output$aboutpage <- renderUI ({
-      str1 <- paste("Data derived from daily, municipality-level case reports from Wayne County Health Department. Data represent cases confirmed for each date (i.e., cases are associated with the date of confirmation, not date of symptom onset or specimen collection).")
-      str2 <- paste("Contact Emily Somers (emsomers@med.umich.edu) or Kaitlyn Akel (kbakel@umich.edu) for more information about the project")
+    
+      str1 <- paste("Data is derived from daily, municipality-level case reports from Wayne County Health Department. Data represent cases confirmed for each date (i.e., cases are associated with the date of confirmation, not date of symptom onset or specimen collection).")
+      str2 <- paste("Contact Dr. Emily Somers (emsomers@umich.edu) or Kaitlyn Akel (kbakel@umich.edu) for more information about the project")
       HTML(paste(str1, str2, sep = '<br/>'))
+    
+    
+  })
+  output$uploadpage <- renderUI ({
+      
     
     
   })
