@@ -20,7 +20,7 @@ ui <- fluidPage(
       
       
       checkboxGroupInput("regionsavailable","Regions Available:",regions, selected = regions),
-      
+      p ("The 'combined' line is the combined 7 day incidence averages for Canton, Plymouth City, and Plymouth Township added together; it does not update for the specific regions selected"),
       
       
       br(),
@@ -57,6 +57,8 @@ ui <- fluidPage(
                            p ("This dashboard was originially generated on a weekly basis to inform the Plymouth-Canton Community Community Schools on local rates COVID-19 cases."),
                            h2 ("About The Data"),
                            p("Data is derived from daily, municipality-level case reports from Wayne County Health Department. Data represent cases confirmed for each date (i.e., cases are associated with the date of confirmation, not date of symptom onset or specimen collection)."),
+                           HTML("<p>For the COVID-19 cases in the state of Michigan, visit the  <a href='https://www.mistartmap.info/?mdoc=0&probable=1'>MI Safe Start Map</a></p>"),   
+                           
                   h2 ("Contact"),
                   p ("Contact Dr. Emily Somers (emsomers@umich.edu) or Kaitlyn Akel (kbakel@umich.edu) for more information about the data used for the dashboard.")),
                   tabPanel("Help", 
