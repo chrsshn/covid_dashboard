@@ -34,21 +34,21 @@ dat_7dayincidences = dat_all %>%
   rename ('Canton' = canton_7day,
           'Plymouth City' = plymouth_city_7day,
           'Plymouth Township' = plymouth_township_7day,
-          'Combined' = combined_7day) %>%
-  pivot_longer (!date, names_to = "region", values_to = "count") %>% 
-  mutate (region = factor (region, levels = c ("Canton", "Plymouth City", "Plymouth Township", "Combined"))) 
+          'Combined (Canton and Plymouth)' = combined_7day) %>%
+  pivot_longer (!date, names_to = "municipality", values_to = "count") %>% 
+  mutate (municipality = factor (municipality, levels = c ("Canton", "Plymouth City", "Plymouth Township", "Combined (Canton and Plymouth)"))) 
 
 
 
-dat_7dayincidences$color = as.character (recode (dat_7dayincidences$region,
+dat_7dayincidences$color = as.character (recode (dat_7dayincidences$municipality,
                                    'Canton' = "#E90003",
                                    'Plymouth City' = "#1B9E77",
                                    'Plymouth Township' = "#7570B3",
-                                   'Combined' = "#AAAAAA"))
+                                   'Combined (Canton and Plymouth)' = "#AAAAAA"))
 
 
-dat_7dayincidences$linetype = as.character (recode (dat_7dayincidences$region,
+dat_7dayincidences$linetype = as.character (recode (dat_7dayincidences$municipality,
                                    'Canton' = 'dash',
                                    'Plymouth City' = 'dot',
                                    'Plymouth Township' = 'dotdash',
-                                   'Combined' = 'solid'))
+                                   'Combined (Canton and Plymouth)' = 'solid'))
