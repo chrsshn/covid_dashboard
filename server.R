@@ -1,16 +1,25 @@
-
 library(shiny)
 library (tidyverse)
 library (plotly)
+logged <- F
 
-
-source ("getdata.R")
 
 
 
 server <- function(input, output) {
   
+  source ("getdata.R")
+  source ("ui_add_data_page.R")
   
+  
+  
+
+  calculate_7day_incidences <- reactive ({
+    
+    
+    
+    
+  })
   
   selected_data_points <- reactive ({
     req(input$daterange1)
@@ -40,11 +49,11 @@ server <- function(input, output) {
     }
     
     l <- list(
-      bordercolor = "#111111",
+      # bordercolor = "#111111",
       borderwidth = 1,
-      x = 0.08, 
-      y = 1,
-      title=list(text='<b> Region </b>'))
+      # x = 0.08, 
+      y = .5,
+      title=list(text='<b> Municipality </b>'))
       
       date_range_print <- list(
         text = paste ("Dates:",as.Date(input$daterange1[1]),"to", as.Date(input$daterange1[2])),
@@ -53,7 +62,7 @@ server <- function(input, output) {
         yanchor = "bottom",
         xanchor = "center",
         align = "center",
-        x = 0.47,
+        x = 0.585,
         y = 1.03,
         showarrow = FALSE
       )
@@ -66,7 +75,7 @@ server <- function(input, output) {
         yanchor = "bottom",
         xanchor = "center",
         align = "center",
-        x = 0.47,
+        x = 0.585,
         y = .98,
         showarrow = FALSE
       )
@@ -89,7 +98,9 @@ server <- function(input, output) {
                              hline (70, "8d6cb0"), 
                              hline (150, "8a419e")),
               xaxis = list(title = "Date"), 
-              yaxis = list(title = "Incidence\n7-day average (cases/million/day)"),
+              yaxis = list(title = "Incidence\n7-day average (cases/million/day)",
+                           autotick = F,
+                           dtick = 50),
               title =  "Plymouth & Canton Incidence",
               annotations = list(date_range_print, time_frame_print),
               legend = l,
@@ -102,7 +113,20 @@ server <- function(input, output) {
               #   xanchor = "left", yanchor = "bottom",
               #   sizing = "stretch"
               # ),
-              margin = list(t = 60))
+              margin = list(t = 60),
+              images = list (
+                source = "https://github.com/chrsshn/covid_dashboard/blob/main/www/risk_levels_with_values.png?raw=true",
+                xref = "paper",
+                yref = "paper",
+                x = .5,
+                y = .5,
+                sizex = 90,
+                sizey = 90,
+                sizing = "stretch",
+                opacity = .9
+              )
+            
+              )
               
     
   })
@@ -128,6 +152,11 @@ server <- function(input, output) {
     
     
   })
+  
+  output$checkpassword <- renderText({
+    req(input$go)
+    isolate(input$password)
+  })
 
     output$datelastupdated <- renderText ({
     paste ("The data was last updated on 2020-11-07")
@@ -149,7 +178,7 @@ server <- function(input, output) {
   })
   output$helppage <- renderUI ({
       str1 <- paste("FAQs coming soon")
-      str2 <- paste("Contact Chris Shin (shincd@umich.edu) for additional help")
+      str2 <- paste("Contact Chris Shin (shincd@umich.edu) for technical help with the dashboad")
       HTML(paste(str1, str2, sep = '<br/>'))
     
     
