@@ -1,0 +1,25 @@
+{
+    "id": "6FEEBD57",
+    "path": "~/drive:shincd/repos/covid_dashboard/server.R",
+    "project_path": "server.R",
+    "type": "r_source",
+    "hash": "490634806",
+    "contents": "",
+    "dirty": false,
+    "created": 1606009079015.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "tempName": "Untitled2",
+        "cursorPosition": "99,44",
+        "scrollLine": "92"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1606015988,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1606015988808,
+    "read_only": false,
+    "read_only_alternatives": []
+}
