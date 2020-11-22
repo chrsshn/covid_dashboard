@@ -3,7 +3,7 @@
     "path": "~/drive:shincd/repos/covid_dashboard/server.R",
     "project_path": "server.R",
     "type": "r_source",
-    "hash": "490634806",
+    "hash": "155846614",
     "contents": "",
     "dirty": false,
     "created": 1606009079015.0,
@@ -11,15 +11,15 @@
     "relative_order": 2,
     "properties": {
         "tempName": "Untitled2",
-        "cursorPosition": "99,44",
-        "scrollLine": "92"
+        "cursorPosition": "105,80",
+        "scrollLine": "77"
     },
     "folds": "",
-    "lastKnownWriteTime": 1606015988,
+    "lastKnownWriteTime": 1606020399,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1606015988808,
+    "last_content_update": 1606020399634,
     "read_only": false,
     "read_only_alternatives": []
 }

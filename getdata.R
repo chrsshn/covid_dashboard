@@ -2,7 +2,7 @@ library (zoo)
 library (tidyverse)
 
 denoms = readr::read_csv ("denominators.csv",
-                          col_names = c("region", "population"),
+                          col_names = c("municipality", "population"),
                           col_types = "cd")
 
 

@@ -25,7 +25,7 @@ server <- function(input, output) {
     req(input$daterange1)
     dat_7dayincidences %>%
       filter (date <= as.Date(input$daterange1[2]) & date >= as.Date(input$daterange1[1]),
-              as.character (region) %in% input$regionsavailable)
+              as.character (region) %in% input$municipalitiesavailable)
 
     
   }) 
@@ -53,7 +53,8 @@ server <- function(input, output) {
       borderwidth = 1,
       # x = 0.08, 
       y = .5,
-      title=list(text='<b> Municipality </b>'))
+      title=list(text='<b> Municipality </b>',
+                 x = 0.5))
       
       date_range_print <- list(
         text = paste ("Dates:",as.Date(input$daterange1[1]),"to", as.Date(input$daterange1[2])),
@@ -62,7 +63,7 @@ server <- function(input, output) {
         yanchor = "bottom",
         xanchor = "center",
         align = "center",
-        x = 0.585,
+        x = 0.5,
         y = 1.03,
         showarrow = FALSE
       )
@@ -75,7 +76,8 @@ server <- function(input, output) {
         yanchor = "bottom",
         xanchor = "center",
         align = "center",
-        x = 0.585,
+        
+        x = 0.5,
         y = .98,
         showarrow = FALSE
       )
@@ -101,7 +103,7 @@ server <- function(input, output) {
               yaxis = list(title = "Incidence\n7-day average (cases/million/day)",
                            autotick = F,
                            dtick = 50),
-              title =  "Plymouth & Canton Incidence",
+              title =  list (text = "Plymouth & Canton Incidence", xref = 'paper',x = .5),
               annotations = list(date_range_print, time_frame_print),
               legend = l,
               showlegend = T,

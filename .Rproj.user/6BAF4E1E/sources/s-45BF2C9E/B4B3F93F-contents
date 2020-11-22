@@ -1,0 +1,53 @@
+library (shiny)
+library (plotly)
+library (shinydashboard)
+# library (shinyjs)
+
+regions = c("Canton", "Combined (Canton and Plymouth)", "Plymouth City", "Plymouth Township")
+
+
+ui_main_page <- dashboardPage(
+  
+  # Application title
+  dashboardHeader("COVID-19 Incidence"),
+  
+  # Sidebar with a slider input for number of bins 
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Home", tabName = "home"))),
+  dashboardBody (
+    tabItems (
+      tabItem (tabName = "home", ,
+      
+      
+      # Show a plot of the generated distribution
+      mainPanel(
+        tabsetPanel(type = "tabs",
+                    tabPanel("Plot", 
+                             plotlyOutput("distPlot")),
+                    
+                    tabPanel("About Page", 
+                             # htmlOutput("aboutpage"),
+                             
+                    tabPanel("Help", 
+                             # htmlOutput("helppage"),
+                             h2 ("Contact"),
+                             p("Contact Chris Shin (shincd@umich.edu) for questions related to the dashboard.")
+                    )
+        )
+        
+        
+        
+      )
+      
+      
+      
+      
+      
+    )
+  )
+)
+
+
+)
+)
