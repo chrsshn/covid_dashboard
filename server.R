@@ -1,16 +1,33 @@
 library(shiny)
 library (tidyverse)
 library (plotly)
-logged <- F
+library (DT)
 
-
-
-
-server <- function(input, output) {
+server <- function(input, output, session) {
   
   source ("getdata.R")
-  source ("ui_add_data_page.R")
   
+  observeEvent(input$login, {
+    showModal(modalDialog(
+      passwordInput ("password", "Enter password"),
+      actionButton ("submit_password", "Submit")
+    ))
+  })
+
+  
+  observeEvent(input$submit_password,{
+    if(input$password == "canton"){
+      showModal(modalDialog(
+        p("The 'Add data' tab is now accessible"),
+        show(selector = "ul li:eq(4)")
+      ))
+    
+    } else {
+      showModal (modalDialog(p ("Incorrect password"),
+                             hide(selector = "ul li:eq(4)") ))
+      
+    }
+  })
   
   
 
@@ -25,10 +42,14 @@ server <- function(input, output) {
     req(input$daterange1)
     dat_7dayincidences %>%
       filter (date <= as.Date(input$daterange1[2]) & date >= as.Date(input$daterange1[1]),
-              as.character (region) %in% input$municipalitiesavailable)
+              as.character (municipality) %in% input$municipalitiesavailable)
 
     
   }) 
+  
+  output$plotted_points <- renderDataTable(
+    selected_data_points()
+  )
   
 
   
@@ -86,7 +107,7 @@ server <- function(input, output) {
       plot_ly (data = selected_data_points(), 
                x = ~date, 
                y = ~count, 
-               name = ~as.factor(region),
+               name = ~as.factor(municipality),
                type = "scatter", 
                mode = "lines", 
                linetype = ~I(linetype),
@@ -107,26 +128,15 @@ server <- function(input, output) {
               annotations = list(date_range_print, time_frame_print),
               legend = l,
               showlegend = T,
-              # images = list(
-              #   source = base64enc::dataURI(file = "risk_levels_with_values.png"),
-              #   x = .8, y = .8, 
-              #   sizex = 1, sizey = 1,
-              #   xref = "x", yref = "y",
-              #   xanchor = "left", yanchor = "bottom",
-              #   sizing = "stretch"
-              # ),
-              margin = list(t = 60),
-              images = list (
-                source = "https://github.com/chrsshn/covid_dashboard/blob/main/www/risk_levels_with_values.png?raw=true",
-                xref = "paper",
-                yref = "paper",
-                x = .5,
-                y = .5,
-                sizex = 90,
-                sizey = 90,
-                sizing = "stretch",
-                opacity = .9
-              )
+              images = list(
+                source = base64enc::dataURI(file = "risk_levels.png"),
+                x = .5, y = -0.35,
+                sizex = 1, sizey = 1,
+                xref = "paper", yref = "paper",
+                xanchor = "center", yanchor = "bottom"
+              ),
+              margin = list(t = 60,
+                            b = 90)
             
               )
               
@@ -141,7 +151,7 @@ server <- function(input, output) {
       todownload = as.data.frame(selected_data_points())%>% 
         pivot_wider (
           id_cols = "date",
-          names_from = "region",
+          names_from = "municipality",
           values_from = "count"
         )
       
@@ -155,10 +165,7 @@ server <- function(input, output) {
     
   })
   
-  output$checkpassword <- renderText({
-    req(input$go)
-    isolate(input$password)
-  })
+
 
     output$datelastupdated <- renderText ({
     paste ("The data was last updated on 2020-11-07")

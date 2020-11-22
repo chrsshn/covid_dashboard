@@ -2,6 +2,7 @@ library (shiny)
 library (plotly)
 library (shinydashboard)
 library (shinyjs)
+library (DT)
 
 municipalities = c("Canton", "Combined (Canton and Plymouth)", "Plymouth City", "Plymouth Township")
 
@@ -68,7 +69,26 @@ ui_main_page <- dashboardPage(
                p ("Contact Dr. Emily Somers (emsomers@umich.edu) or Kaitlyn Akel (kbakel@umich.edu) for more information about the data used for the dashboard.")),
       tabItem (tabName = "help",
                h2 ("Contact"),
-               p("Contact Chris Shin (shincd@umich.edu) for questions related to the dashboard."))
+               p("Contact Chris Shin (shincd@umich.edu) for questions related to the dashboard.")
+               ),
+      tabItem (tabName = "add_data",
+               fluidRow(
+                 box (width = 4,
+                      h3 ("Add Data Point Manually"),
+                      dateInput("newdate", "Date:"),
+                      numericInput ("newcasecount", 
+                                    "Number of Cases:",
+                                    0),
+                      selectInput ("newmunicipality", 
+                                   "Municipality:",
+                                   choices = municipalities[municipalities != "Combined (Canton and Plymouth)"],
+                                   multiple = F),
+                      h3 ("Save Changes"),
+                      actionButton ("add_new_data_point", "Submit New Data Point")),
+                 box (width = 8,
+                      DT::dataTableOutput("plotted_points")))
+               )
+               
     )
   )
 )
