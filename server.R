@@ -13,6 +13,12 @@ server <- function(input, output, session) {
   
   selected_data_points <- reactiveValues (a = dat_selected)
   
+  selected_3day_surge <- reactiveValues (a = dat_3day_surge)
+  
+  selected_5day_surge <- reactiveValues (a = dat_5day_surge)
+  
+  
+  
   update_selected_data_points <- reactive ({
     incidence_type = case_when (
       input$calculatedincidence == "7 day average" ~ "7day",
@@ -25,14 +31,45 @@ server <- function(input, output, session) {
               as.character (municipality) %in% input$municipalitiesavailable,
               measure == incidence_type)
     
+    if ("3 consecutive days of at least 10% increase in incidence" %in% input$show_surge ) {
+      selected_3day_surge$a <- all_data_points$a %>%
+        filter (date <= as.Date(input$daterange1[2]) & date >=as.Date(input$daterange1[1]),
+                as.character (municipality) %in% input$municipalitiesavailable,
+                is_3day_surge == 1,
+                measure == incidence_type)
+    }
+    else
+      selected_3day_surge$a <- all_data_points$a %>% 
+      filter (is_3day_surge == 3)
+    
+    
+    if ("5 consecutive days of sustained increase in 7 day average incidence" %in% input$show_surge ) {
+      selected_5day_surge$a <- all_data_points$a %>%
+        filter (date <= as.Date(input$daterange1[2]) & date >=as.Date(input$daterange1[1]),
+                as.character (municipality) %in% input$municipalitiesavailable,
+                is_5day_surge == 1,
+                measure == incidence_type)
+    }
+    else
+      selected_3day_surge$a <- all_data_points$a %>% 
+      filter (is_5day_surge == 3)
+    
   })
   
-
-  
-  
-  
+  output$distPlot2 <- renderPlotly ({
+    plot_ly(data = selected_3day_surge$a,
+            x = ~date,
+            y = ~value,
+            type = "scatter",
+            mode = "markers",
+            color = ~I(color),
+            size = 2   ) 
+    
+  })
   output$distPlot <- renderPlotly({
     update_selected_data_points()
+    
+    
     
     add_hline <- function(y = 0, color = "blue") {
       list(
@@ -73,9 +110,13 @@ server <- function(input, output, session) {
     )
     
     time_frame <- round ((as.Date(input$daterange1[2]) - as.Date(input$daterange1[1])) / 7, 1)
-    
+    time_frame_message <- ifelse (time_frame != 1, 
+                                  paste ("Time Frame:",time_frame,"Weeks"),
+                                  paste ("Time Frame:",time_frame,"Week")
+                                  )
+                                  
     time_frame_print <- list(
-      text = paste ("Time Frame:",time_frame,"Weeks"),
+      text = time_frame_message,
       xref = "paper",
       yref = "paper",
       yanchor = "bottom",
@@ -94,15 +135,45 @@ server <- function(input, output, session) {
       xanchor = "center", yanchor = "bottom"
     )
     
-    plot_ly (data = selected_data_points$a, 
-             x = ~date, 
-             y = ~value, 
-             name = ~as.factor(municipality),
-             type = "scatter", 
-             mode = "lines", 
-             linetype = ~I(linetype),
-             color = ~I(color),
-             yaxis = list (title = 'Incidence\n7-day average (cases/million/day)')) %>%
+    plot_ly () %>%
+      add_trace(data = selected_data_points$a, 
+                x = ~date, 
+                y = ~value, 
+                name = ~as.factor(municipality),
+                type = "scatter", 
+                mode = "lines", 
+                hoverinfo = 'text',
+                text = ~paste0 (municipality, " Incidence for ", date, ": ", value),
+                linetype = ~I(linetype),
+                color = ~I(color),
+                yaxis = list (title = 'Incidence\n7-day average (cases/million/day)'))   %>%
+      add_trace(data = selected_3day_surge$a,
+                x = ~date,
+                y = ~value,
+                name = "3 Day Surge",
+                type = "scatter",
+                mode = "markers",
+                hoverinfo = 'text',
+                text = ~paste0("Change in ",municipality, " Incidence: ", consecutive_percent_increase_in_incidence),
+                opacity = .8,
+                marker = list (
+                  color = "FEE12B",
+                  size = 15
+                ))    %>%
+      add_trace(data = selected_5day_surge$a,
+                x = ~date,
+                y = ~value,
+                name = "5 Day Surge",
+                type = "scatter",
+                mode = "markers",
+                hoverinfo = 'text',
+                text = ~paste0("Consecutive Increases in 7 Day Incidence: ", consecutive_increase_in_7day),
+                opacity = .8,
+                marker = list (
+                  color = "FBB117",
+                  size = 15
+                ))    %>%
+      
       layout (shapes = hlines_print,
               xaxis = list(title = "Date"), 
               yaxis = list(title = paste0 ("Incidence\n",input$calculatedincidence," (cases/million/day)"),
@@ -113,9 +184,14 @@ server <- function(input, output, session) {
               legend = modify_legend,
               showlegend = T,
               images = risk_levels_print,
+              hovermode = "x unified",
               margin = list(t = 60,
-                            b = 90)
-      )
+                            b = 90
+              )
+      ) %>%
+      config (modeBarButtonsToRemove = list ("toggleSpikelines",
+                                             "select2d",
+                                             "lasso2d"))
   })
   
   output$downloadData <- downloadHandler(

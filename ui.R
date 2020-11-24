@@ -14,6 +14,9 @@ incidence_calculations = c("7 day average",
                            "15 day average", 
                            "28 day average")
 
+surgeindicators = c("3 consecutive days of at least 10% increase in incidence",
+                    "5 consecutive days of sustained increase in 7 day average incidence")
+
 source ("getdata.R")
 
 earliest_date = min (dat_all$date)
@@ -65,11 +68,17 @@ ui_main_page <- dashboardPage(
                                    multiple = F,
                                    selected = "7 day average"),
                       br(),
-                      h4 ("Notes on Using the Plot:"),
+                      checkboxGroupInput("show_surge",
+                                         "Show Surge Indicators:",
+                                         surgeindicators, 
+                                         selected = surgeindicators),
+                      br(),
+                      h4 ("Notes on interacting with the plot:"),
                       p ("-horizontal lines correspond to region risk levels designated by the Michigan Department of Health and Human Services"),
                       p ("-to download the plot as a png, hover over the top right corner of the plot and click on the camera button ('Download plot as a png')"),
                       p ("-to pan through dates, hover over the top right corner of the plot and click on the up-down-left-right arrows button ('Pan')"),
                       p ("-to reset the plot, hover over the top right corner of the plot and click on the home button ('Reset axes')"),
+
                       br(),
                       br(),
                       downloadButton("downloadData", "Download Data Used to Generate Plot"),

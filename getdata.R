@@ -1,6 +1,13 @@
 # library (zoo)
 library (dplyr)
 library (googlesheets4)
+library (googledrive)
+library (tidyr)
+
+# options(gargle_oauth_cache = ".secrets")
+
+drive_auth(cache = ".secrets", email = "shincd@umich.edu")
+sheets_auth(token = drive_token())
 
 
 
@@ -24,7 +31,7 @@ recalculate_incidences <- function (dat) {
             canton_28day = c(rep(NA, 27),zoo::rollmean (canton_incidence, k = 28, align = "right")),
             plymouthcity_28day =c(rep(NA, 27), zoo::rollmean (plymouthcity_incidence, k = 28, align = "right")),
             plymouthtownship_28day = c(rep(NA, 27),zoo::rollmean (plymouthtownship_incidence, k = 28, align = "right")),
-            combined_28day = c(rep(NA, 27),zoo::rollmean (combined_incidence, k = 28, align = "right")),
+            combined_28day = c(rep(NA, 27),zoo::rollmean (combined_incidence, k = 28, align = "right"))
     ) %>%
     
     
@@ -43,19 +50,76 @@ recalculate_incidences <- function (dat) {
   
   
   dat$color = as.character (recode (dat$municipality,
-                                        'Canton' = "#E90003",
-                                        'Plymouth City' = "#1B9E77",
-                                        'Plymouth Township' = "#7570B3",
-                                        'Combined (Canton and Plymouth)' = "#AAAAAA"))
+                                    'Canton' = "#E90003",
+                                    'Plymouth City' = "#1B9E77",
+                                    'Plymouth Township' = "#7570B3",
+                                    'Combined (Canton and Plymouth)' = "#AAAAAA"))
   
   
   dat$linetype = as.character (recode (dat$municipality,
-                                           'Canton' = 'dash',
-                                           'Plymouth City' = 'dot',
-                                           'Plymouth Township' = 'dotdash',
-                                           'Combined (Canton and Plymouth)' = 'solid'))
+                                       'Canton' = 'dash',
+                                       'Plymouth City' = 'dot',
+                                       'Plymouth Township' = 'dotdash',
+                                       'Combined (Canton and Plymouth)' = 'solid'))
   
-
+  dat = dat %>%
+    select (date, municipality, measure, value) %>%
+    filter (measure == "incidence") %>%
+    group_by (municipality) %>%
+    arrange (date) %>%
+    mutate (percent_increase_in_incidence = ifelse (value != 0 & dplyr::lag (value) != 0, round (((value - dplyr::lag (value))/dplyr::lag (value)) * 100, 2), 0),
+            is_3day_surge = ifelse (((percent_increase_in_incidence) > 10) & (dplyr::lag (percent_increase_in_incidence, 1) > 10) & (dplyr::lag (percent_increase_in_incidence, 2) > 10) |
+                                      ((percent_increase_in_incidence) > 10) & (dplyr::lag (percent_increase_in_incidence, 1) > 10) & (dplyr::lead (percent_increase_in_incidence, 1) > 10) |
+                                      ((percent_increase_in_incidence) > 10) & (dplyr::lead (percent_increase_in_incidence, 1) > 10) & (dplyr::lead (percent_increase_in_incidence, 2) > 10), 1, 0),
+            consecutive_percent_increase_in_incidence = paste0 (dplyr::lag (date, 2), ": ", dplyr::lag (percent_increase_in_incidence, 2), "%, ",
+                                                                dplyr::lag (date, 1), ": ", dplyr::lag (percent_increase_in_incidence, 1), "%, ",
+                                                                date, ": ", percent_increase_in_incidence, "%")) %>%
+    select (date, municipality, percent_increase_in_incidence, is_3day_surge, consecutive_percent_increase_in_incidence) %>%
+    dplyr::left_join (dat, by = c("date", "municipality"))
+  
+  dat = dat %>%
+    select (date, municipality, measure, value) %>%
+    filter (measure == "7day") %>%
+    group_by (municipality) %>%
+    arrange (date) %>%
+    mutate (increase_in_7day = ifelse (lag(value, 1) < value, 1, 0),
+      is_5day_surge = ifelse ((increase_in_7day == 1 &
+                                dplyr::lag (increase_in_7day) == 1 &
+                                dplyr::lag (increase_in_7day, 2)  == 1 &
+                                dplyr::lag (increase_in_7day, 3)  == 1 &
+                                dplyr::lag (increase_in_7day, 4)  == 1) |
+                                (increase_in_7day == 1 &
+                                   dplyr::lag (increase_in_7day) == 1 &
+                                   dplyr::lag (increase_in_7day, 2)  == 1 &
+                                   dplyr::lag (increase_in_7day, 3)  == 1 &
+                                   dplyr::lead (increase_in_7day, 1)  == 1) |
+                                (increase_in_7day == 1 &
+                                   dplyr::lag (increase_in_7day) == 1 &
+                                   dplyr::lag (increase_in_7day, 2)  == 1 &
+                                   dplyr::lead (increase_in_7day, 1)  == 1 &
+                                   dplyr::lead (increase_in_7day, 2)  == 1) |
+                                (increase_in_7day == 1 &
+                                   dplyr::lag (increase_in_7day) == 1 &
+                                   dplyr::lead (increase_in_7day, 1)  == 1 &
+                                   dplyr::lead (increase_in_7day, 2)  == 1 &
+                                   dplyr::lead (increase_in_7day, 3)  == 1) |
+                                (increase_in_7day == 1 &
+                                   dplyr::lead (increase_in_7day) == 1 &
+                                   dplyr::lead (increase_in_7day, 2)  == 1 &
+                                   dplyr::lead (increase_in_7day, 3)  == 1 &
+                                   dplyr::lead (increase_in_7day, 4)  == 1) , 1, 0),
+            consecutive_increase_in_7day = paste0 (dplyr::lag (date, 5), ": ", dplyr::lag (value, 5), ", ",
+                                                   dplyr::lag (date, 4), ": ", dplyr::lag (value, 4), ", ",
+                                                   dplyr::lag (date, 3), ": ", dplyr::lag (value, 3), ", ",
+                                                   dplyr::lag (date, 2), ": ", dplyr::lag (value, 2), ", ",
+                                                   dplyr::lag (date, 1), ": ", dplyr::lag (value, 1), ", ",
+                                                   date, ": ", value)
+                                                   ) %>%
+    select (date, municipality, increase_in_7day, is_5day_surge, consecutive_increase_in_7day) %>%
+    dplyr::left_join (dat, by = c("date", "municipality"))
+  
+  
+  
   return (as.data.frame(dat))
 }
 
@@ -64,12 +128,22 @@ denoms = readr::read_csv ("denominators.csv",
                           col_types = "cd")
 
 
-dat <- read_sheet ("https://docs.google.com/spreadsheets/d/1_BWCAtqFdap8giAtqvZLqVcmPj_MkXUt3Dnge4NGgyk/edit#gid=0")
+dat_cases_only <- read_sheet ("https://docs.google.com/spreadsheets/d/1_BWCAtqFdap8giAtqvZLqVcmPj_MkXUt3Dnge4NGgyk/edit#gid=0")
 
-dat_all = recalculate_incidences (dat)
+dat_all = recalculate_incidences (dat_cases_only)
 
 dat_selected <- dat_all %>%
   filter (date <= max(dat_all$date) & date >= max(dat_all$date) - 28,
           measure == "7day")
+
+dat_3day_surge <- dat_all %>%
+  filter (date <= max(dat_all$date) & date >= max(dat_all$date) - 28,
+          is_3day_surge == 1,
+          measure == "7day") 
+
+dat_5day_surge <- dat_all %>%
+  filter (date <= max(dat_all$date) & date >= max(dat_all$date) - 28,
+          is_5day_surge == 1,
+          measure == "7day") 
 
 
