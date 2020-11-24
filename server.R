@@ -155,12 +155,14 @@ server <- function(input, output, session) {
   observeEvent(input$submit_password,{
     if(input$password == "canton"){
       showModal(modalDialog(
-        p("The 'Add data' tab is now accessible"),
-        show(selector = "ul li:eq(4)")
+        p("The 'News' and Add data' tabs are now accessible"),
+        show(selector = "ul li:eq(2)"),
+        show(selector = "ul li:eq(5)")
       ))
     } else {
       showModal (modalDialog(p ("Incorrect password"),
-                             hide(selector = "ul li:eq(4)") ))
+                             hide(selector = "ul li:eq(2)"),
+                             hide(selector = "ul li:eq(5)")))
       
     }
   })

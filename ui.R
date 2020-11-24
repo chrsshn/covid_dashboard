@@ -2,7 +2,8 @@ library (shiny)
 library (plotly)
 library (shinydashboard)
 library (shinyjs)
-library (DT)
+# library (DT)
+library (markdown)
 
 municipalities = c("Canton", 
                    "Combined (Canton and Plymouth)", 
@@ -29,6 +30,7 @@ ui_main_page <- dashboardPage(
       useShinyjs(),
       id = "tabs",
       menuItem("Home", tabName = "home"),
+      hidden(menuItem ("News", tabName = "news")),
       menuItem ("About", tabName = "about"),
       menuItem ("Help", tabName = "help"),
       hidden(menuItem("Add Data", tabName = 'add_data')
@@ -80,6 +82,18 @@ ui_main_page <- dashboardPage(
                  )
                )
       ),
+      tabItem (tabName = "news",
+               fluidRow(
+                 box (
+                   width = 7,
+                      includeMarkdown("notes.md")),
+                 box (width = 4,
+                      title = "Upcoming Pop-Up Testing Sites in Wayne County",
+                      p("Inkster, Dozier Recreation Center: November 14 & 15"),
+                      p("Woodhaven: November 21 & 22"))
+               
+               )
+               ),
       tabItem (tabName = "about",
                h2 ("About The Data"),
                p("Data is derived from daily, municipality-level case reports from Wayne County Health Department. Data represent cases confirmed for each date (i.e., cases are associated with the date of confirmation, not date of symptom onset or specimen collection)."),
@@ -96,10 +110,13 @@ ui_main_page <- dashboardPage(
                  width = 8,
                  HTML("<p>To add new data points, add them to the google sheet  <a href='https://docs.google.com/spreadsheets/d/1_BWCAtqFdap8giAtqvZLqVcmPj_MkXUt3Dnge4NGgyk/edit?usp=sharing'>here</a></p>")
                )
-               
       )
     )
+    
   )
+
+
 )
+
 
 
