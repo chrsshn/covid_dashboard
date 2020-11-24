@@ -137,7 +137,10 @@ server <- function(input, output, session) {
     }
   )
   
-
+  
+  output$datelastupdated <- renderText ({
+    paste ("The data was last updated on 2020-11-07")
+  })
   
   
   observeEvent(input$login, {
