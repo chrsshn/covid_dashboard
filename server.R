@@ -1,63 +1,80 @@
 library(shiny)
-library (tidyverse)
+library (dplyr)
 library (plotly)
 library (DT)
 
+
+
 server <- function(input, output, session) {
   
-  source ("getdata.R")
+  all_cases <- reactiveValues (a = dat_cases_only)
   
-  observeEvent(input$login, {
-    showModal(modalDialog(
-      passwordInput ("password", "Enter password"),
-      actionButton ("submit_password", "Submit")
-    ))
-  })
-
+  all_data_points <- reactiveValues (a = dat_all)
   
-  observeEvent(input$submit_password,{
-    if(input$password == "canton"){
-      showModal(modalDialog(
-        p("The 'Add data' tab is now accessible"),
-        show(selector = "ul li:eq(4)")
-      ))
+  update_all_data_points <- function() {
     
-    } else {
-      showModal (modalDialog(p ("Incorrect password"),
-                             hide(selector = "ul li:eq(4)") ))
-      
-    }
-  })
-  
-  
-
-  calculate_7day_incidences <- reactive ({
+    cases_temp = rbind (all_cases$a, 
+                        data.frame (date = as.Date(input$newdate, format = c("%Y-%m-%d")),
+                                    canton_cases = input$newcasecountcanton,
+                                    plymouthcity_cases = input$newcasecountplymouthcity,
+                                    plymouthtownship_cases = input$newcasecountplymouthtownship))
+    all_temp <- recalculate_incidences (cases_temp)
+    all_data_points$a <- all_temp
     
     
+  }
+  
+  update_all_data_points <- eventReactive(input$add_new_data_point, {
+    cases_temp = rbind (all_cases$a, 
+                        data.frame (date = as.Date(input$newdate, format = c("%Y-%m-%d")),
+                                    canton_cases = input$newcasecountcanton,
+                                    plymouthcity_cases = input$newcasecountplymouthcity,
+                                    plymouthtownship_cases = input$newcasecountplymouthtownship))
+    all_temp <- recalculate_incidences (cases_temp)
+     all_temp
     
     
   })
   
-  selected_data_points <- reactive ({
-    req(input$daterange1)
-    dat_7dayincidences %>%
-      filter (date <= as.Date(input$daterange1[2]) & date >= as.Date(input$daterange1[1]),
-              as.character (municipality) %in% input$municipalitiesavailable)
-
-    
-  }) 
   
-  output$plotted_points <- renderDataTable(
-    selected_data_points()
+  
+  output$see_new_values <- renderText({
+    str (all_data_points$a)
+  }
   )
   
-
+  update_selected_data_points <- reactive ({
+    incidence_type = case_when (
+      input$calculatedincidence == "7 day average" ~ "7day",
+      input$calculatedincidence == "15 day average" ~ "15day",
+      input$calculatedincidence == "28 day average" ~ "28day",
+    )
+    
+    selected_data_points$a <- all_data_points$a %>%
+      filter (date <= as.Date(input$daterange1[2]) & date >= as.Date(input$daterange1[1]),
+              as.character (municipality) %in% input$municipalitiesavailable,
+              measure == incidence_type)
+    
+  })
+  
+  selected_data_points <- reactiveValues (a = dat_selected)
+  
+  output$available_points <- renderDataTable({
+    
+    update_all_data_points() %>%
+      select (date, municipality, measure, value) %>%
+      pivot_wider (id_cols = c("date", "municipality"),
+                   names_from ="measure",
+                   values_from = "value",
+                   values_fill = NA)
+  })
+  
+  
   
   output$distPlot <- renderPlotly({
+    update_selected_data_points()
     
-    
-    
-    hline <- function(y = 0, color = "blue") {
+    add_hline <- function(y = 0, color = "blue") {
       list(
         type = "line", 
         x0 = 0, 
@@ -69,130 +86,124 @@ server <- function(input, output, session) {
       )
     }
     
-    l <- list(
-      # bordercolor = "#111111",
+    hlines_print <- list( 
+      add_hline(7, "a0bddc"),
+      add_hline(20, "8b96c9"),
+      add_hline(40, "8d6cb0"), 
+      add_hline (70, "8a419e"), 
+      add_hline (150, "6c1769"))
+    
+    
+    modify_legend <- list(
       borderwidth = 1,
-      # x = 0.08, 
       y = .5,
       title=list(text='<b> Municipality </b>',
                  x = 0.5))
-      
-      date_range_print <- list(
-        text = paste ("Dates:",as.Date(input$daterange1[1]),"to", as.Date(input$daterange1[2])),
-        xref = "paper",
-        yref = "paper",
-        yanchor = "bottom",
-        xanchor = "center",
-        align = "center",
-        x = 0.5,
-        y = 1.03,
-        showarrow = FALSE
-      )
     
-      time_frame <- round ((as.Date(input$daterange1[2]) - as.Date(input$daterange1[1])) / 7, 1)
-      time_frame_print <- list(
-        text = paste ("Time Frame:",time_frame,"Weeks"),
-        xref = "paper",
-        yref = "paper",
-        yanchor = "bottom",
-        xanchor = "center",
-        align = "center",
-        
-        x = 0.5,
-        y = .98,
-        showarrow = FALSE
-      )
+    date_range_print <- list(
+      text = paste ("Dates:",as.Date(input$daterange1[1]),"to", as.Date(input$daterange1[2])),
+      xref = "paper",
+      yref = "paper",
+      yanchor = "bottom",
+      xanchor = "center",
+      align = "center",
+      x = 0.5,
+      y = 1.04,
+      showarrow = FALSE
+    )
     
-      #get min value and choose which hlines to show
-      plot_ly (data = selected_data_points(), 
-               x = ~date, 
-               y = ~count, 
-               name = ~as.factor(municipality),
-               type = "scatter", 
-               mode = "lines", 
-               linetype = ~I(linetype),
-               # linetypes = c('dash','dot','dotdash','solid'),
-               color = ~I(color),
-               # colors = c('#e90003','#1B9E77','#7570B3','#AAAAAA'),
-               yaxis = list (title = 'Incidence\n7-day average (cases/million/day)')) %>%
-      layout (shapes = list( hline(7, "bed4e6"),
-                             hline(20, "a0bddc"),
-                             hline(40, "8b96c9"), 
-                             hline (70, "8d6cb0"), 
-                             hline (150, "8a419e")),
+    time_frame <- round ((as.Date(input$daterange1[2]) - as.Date(input$daterange1[1])) / 7, 1)
+    
+    time_frame_print <- list(
+      text = paste ("Time Frame:",time_frame,"Weeks"),
+      xref = "paper",
+      yref = "paper",
+      yanchor = "bottom",
+      xanchor = "center",
+      align = "center",
+      x = 0.5,
+      y = .985,
+      showarrow = FALSE
+    )
+    
+    risk_levels_print <- list(
+      source = base64enc::dataURI(file = "risk_levels.png"),
+      x = .5, y = -0.356,
+      sizex = 1, sizey = 1,
+      xref = "paper", yref = "paper",
+      xanchor = "center", yanchor = "bottom"
+    )
+    
+    plot_ly (data = selected_data_points$a, 
+             x = ~date, 
+             y = ~value, 
+             name = ~as.factor(municipality),
+             type = "scatter", 
+             mode = "lines", 
+             linetype = ~I(linetype),
+             color = ~I(color),
+             yaxis = list (title = 'Incidence\n7-day average (cases/million/day)')) %>%
+      layout (shapes = hlines_print,
               xaxis = list(title = "Date"), 
-              yaxis = list(title = "Incidence\n7-day average (cases/million/day)",
+              yaxis = list(title = paste0 ("Incidence\n",input$calculatedincidence," (cases/million/day)"),
                            autotick = F,
                            dtick = 50),
               title =  list (text = "Plymouth & Canton Incidence", xref = 'paper',x = .5),
               annotations = list(date_range_print, time_frame_print),
-              legend = l,
+              legend = modify_legend,
               showlegend = T,
-              images = list(
-                source = base64enc::dataURI(file = "risk_levels.png"),
-                x = .5, y = -0.35,
-                sizex = 1, sizey = 1,
-                xref = "paper", yref = "paper",
-                xanchor = "center", yanchor = "bottom"
-              ),
+              images = risk_levels_print,
               margin = list(t = 60,
                             b = 90)
-            
-              )
-              
-    
+      )
   })
   
   output$downloadData <- downloadHandler(
     filename = function() {
-      paste("cantonplymouth.csv", sep = "")
+      paste(format (Sys.Date(), "%Y_%m_%d_"), 
+            "cantonplymouth_",
+            str_replace_all (input$calculatedincidence, " ", "_" ),
+            ".csv", 
+            sep = "")
     },
     content = function(file) {
       todownload = as.data.frame(selected_data_points())%>% 
         pivot_wider (
           id_cols = "date",
           names_from = "municipality",
-          values_from = "count"
+          values_from = "value"
         )
-      
       write.csv(todownload, file, row.names = FALSE)
     }
   )
   
-  output$test <- renderPrint ({
-    str (selected_data_points())
-    
-    
+  
+  output$datelastupdated <- renderText ({
+    paste ("The data was last updated on 2020-11-07")
   })
   
-
-
-    output$datelastupdated <- renderText ({
-    paste ("The data was last updated on 2020-11-07")
-    
-    
+  
+  observeEvent(input$login, {
+    showModal(modalDialog(
+      passwordInput ("password", "Enter password"),
+      actionButton ("submit_password", "Submit")
+    )
+    )
   })
-  output$aboutpage <- renderUI ({
-    
-      str1 <- paste("Data is derived from daily, municipality-level case reports from Wayne County Health Department. Data represent cases confirmed for each date (i.e., cases are associated with the date of confirmation, not date of symptom onset or specimen collection).")
-      str2 <- paste("Contact Dr. Emily Somers (emsomers@umich.edu) or Kaitlyn Akel (kbakel@umich.edu) for more information about the project")
-      HTML(paste(str1, str2, sep = '<br/>'))
-    
-    
-  })
-  output$uploadpage <- renderUI ({
+  
+  
+  observeEvent(input$submit_password,{
+    if(input$password == "canton"){
+      showModal(modalDialog(
+        p("The 'Add data' tab is now accessible"),
+        show(selector = "ul li:eq(4)")
+      ))
+    } else {
+      showModal (modalDialog(p ("Incorrect password"),
+                             hide(selector = "ul li:eq(4)") ))
       
-    
-    
+    }
   })
-  output$helppage <- renderUI ({
-      str1 <- paste("FAQs coming soon")
-      str2 <- paste("Contact Chris Shin (shincd@umich.edu) for technical help with the dashboad")
-      HTML(paste(str1, str2, sep = '<br/>'))
-    
-    
-  })
-
   
   
 }

@@ -5,8 +5,8 @@ account: chrsshn
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3238158
-bundleId: 3889928
+bundleId: 3892179
 url: https://chrsshn.shinyapps.io/covid_dashboard/
-when: 1606022398.888
+when: 1606080740.92575
 asMultiple: FALSE
 asStatic: FALSE

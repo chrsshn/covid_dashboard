@@ -4,16 +4,26 @@ library (shinydashboard)
 library (shinyjs)
 library (DT)
 
-municipalities = c("Canton", "Combined (Canton and Plymouth)", "Plymouth City", "Plymouth Township")
+municipalities = c("Canton", 
+                   "Combined (Canton and Plymouth)", 
+                   "Plymouth City", 
+                   "Plymouth Township")
 
+incidence_calculations = c("7 day average", 
+                           "15 day average", 
+                           "28 day average")
+
+source ("getdata.R")
+
+earliest_date = min (dat_all$date)
+latest_date = max (dat_all$date)
 
 ui_main_page <- dashboardPage(
-  
   dashboardHeader(title = "COVID-19 Incidence",
-                  
-                  tags$li (actionLink ("login", label = "Login"),
-                           class = "dropdown")),
-  
+                  tags$li (actionLink ("login", 
+                                       label = "Login"),
+                           class = "dropdown")
+  ),
   dashboardSidebar(
     sidebarMenu(
       useShinyjs(),
@@ -21,26 +31,37 @@ ui_main_page <- dashboardPage(
       menuItem("Home", tabName = "home"),
       menuItem ("About", tabName = "about"),
       menuItem ("Help", tabName = "help"),
-      hidden(menuItem("Add Data", tabName = 'add_data'))
+      hidden(menuItem("Add Data", tabName = 'add_data')
+      )
     )
   ),
   dashboardBody (
     tabItems (
       tabItem (tabName = "home",
                fluidRow (
-                 
-                 
                  box (title = "Parameters",
-                      width = 4,
+                      width = 3,
                       status = "primary",
-                      dateRangeInput("daterange1", "Date range:",
-                                     start = "2020-10-10",
-                                     end = "2020-11-07",
-                                     min = "2020-08-19",
-                                     max   = "2020-11-07"),
-                      p ("The earliest date available is 2020-08-19 and latest date available is 2020-11-07"),
+                      dateRangeInput("daterange1", 
+                                     "Date range:",
+                                     start = latest_date - 28,
+                                     end = latest_date,
+                                     min = earliest_date,
+                                     max   = latest_date),
+                      p (paste0("The earliest date available is ",
+                                earliest_date, 
+                                " and latest date available is ", 
+                                latest_date)),
                       br(),
-                      checkboxGroupInput("municipalitiesavailable","Municipalities Available:",municipalities, selected = municipalities),
+                      checkboxGroupInput("municipalitiesavailable",
+                                         "Municipalities Available:",
+                                         municipalities, 
+                                         selected = municipalities),
+                      br(),
+                      selectInput ("calculatedincidence", "Incidence Metric:",
+                                   choices = incidence_calculations,
+                                   multiple = F,
+                                   selected = "7 day average"),
                       br(),
                       h4 ("Notes on Using the Plot:"),
                       p ("-horizontal lines correspond to region risk levels designated by the Michigan Department of Health and Human Services"),
@@ -51,11 +72,10 @@ ui_main_page <- dashboardPage(
                       br(),
                       downloadButton("downloadData", "Download Data Used to Generate Plot"),
                       textOutput("datelastupdated")
-                      # textOutput("test")
                  ),
                  
                  box (
-                   width = 8,
+                   width = 9,
                    plotlyOutput("distPlot")
                  )
                )
@@ -63,32 +83,40 @@ ui_main_page <- dashboardPage(
       tabItem (tabName = "about",
                h2 ("About The Data"),
                p("Data is derived from daily, municipality-level case reports from Wayne County Health Department. Data represent cases confirmed for each date (i.e., cases are associated with the date of confirmation, not date of symptom onset or specimen collection)."),
-               HTML("<p>For the COVID-19 cases in the state of Michigan, visit the  <a href='https://www.mistartmap.info/?mdoc=0&probable=1'>MI Safe Start Map</a></p>"),   
-               
+               HTML("<p>For COVID-19 indicators across the state of Michigan, visit the  <a href='https://www.mistartmap.info/?mdoc=0&probable=1'>MI Safe Start Map</a></p>"),   
                h2 ("Contact"),
-               p ("Contact Dr. Emily Somers (emsomers@umich.edu) or Kaitlyn Akel (kbakel@umich.edu) for more information about the data used for the dashboard.")),
+               HTML ("<p>Contact <a href='https://ihpi.umich.edu/our-experts/emsomers'>Dr. Emily Somers</a> (emsomers@umich.edu) or Kaitlyn Akel (kbakel@umich.edu) for more information about the data used for the dashboard.")),
       tabItem (tabName = "help",
                h2 ("Contact"),
-               p("Contact Chris Shin (shincd@umich.edu) for questions related to the dashboard.")
-               ),
+               p("Contact Chris Shin (shincd@umich.edu) for technical help related to the dashboard.")
+      ),
       tabItem (tabName = "add_data",
                fluidRow(
                  box (width = 4,
                       h3 ("Add Data Point Manually"),
-                      dateInput("newdate", "Date:"),
-                      numericInput ("newcasecount", 
-                                    "Number of Cases:",
+                      dateInput("newdate", 
+                                "Date:",
+                                min = latest_date + 1,
+                                value = latest_date + 1),
+                      numericInput ("newcasecountcanton", 
+                                    "Number of Cases in Canton:",
                                     0),
-                      selectInput ("newmunicipality", 
-                                   "Municipality:",
-                                   choices = municipalities[municipalities != "Combined (Canton and Plymouth)"],
-                                   multiple = F),
-                      h3 ("Save Changes"),
-                      actionButton ("add_new_data_point", "Submit New Data Point")),
-                 box (width = 8,
-                      DT::dataTableOutput("plotted_points")))
-               )
-               
+                      numericInput ("newcasecountplymouthcity", 
+                                    "Number of Cases in Plymouth City:",
+                                    0),
+                      numericInput ("newcasecountplymouthtownship", 
+                                    "Number of Cases in Plymouth Township:",
+                                    0),
+                      
+                      actionButton ("add_new_data_point", 
+                                    "Submit New Data Point"),
+                      verbatimTextOutput("see_new_values")),
+                 box (
+                   width = 8,
+                   h3("Current Data Set"),
+                   DT::dataTableOutput("available_points")))
+      )
+      
     )
   )
 )
