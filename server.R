@@ -11,37 +11,7 @@ server <- function(input, output, session) {
   
   all_data_points <- reactiveValues (a = dat_all)
   
-  update_all_data_points <- function() {
-    
-    cases_temp = rbind (all_cases$a, 
-                        data.frame (date = as.Date(input$newdate, format = c("%Y-%m-%d")),
-                                    canton_cases = input$newcasecountcanton,
-                                    plymouthcity_cases = input$newcasecountplymouthcity,
-                                    plymouthtownship_cases = input$newcasecountplymouthtownship))
-    all_temp <- recalculate_incidences (cases_temp)
-    all_data_points$a <- all_temp
-    
-    
-  }
-  
-  update_all_data_points <- eventReactive(input$add_new_data_point, {
-    cases_temp = rbind (all_cases$a, 
-                        data.frame (date = as.Date(input$newdate, format = c("%Y-%m-%d")),
-                                    canton_cases = input$newcasecountcanton,
-                                    plymouthcity_cases = input$newcasecountplymouthcity,
-                                    plymouthtownship_cases = input$newcasecountplymouthtownship))
-    all_temp <- recalculate_incidences (cases_temp)
-     all_temp
-    
-    
-  })
-  
-  
-  
-  output$see_new_values <- renderText({
-    str (all_data_points$a)
-  }
-  )
+  selected_data_points <- reactiveValues (a = dat_selected)
   
   update_selected_data_points <- reactive ({
     incidence_type = case_when (
@@ -57,17 +27,7 @@ server <- function(input, output, session) {
     
   })
   
-  selected_data_points <- reactiveValues (a = dat_selected)
-  
-  output$available_points <- renderDataTable({
-    
-    update_all_data_points() %>%
-      select (date, municipality, measure, value) %>%
-      pivot_wider (id_cols = c("date", "municipality"),
-                   names_from ="measure",
-                   values_from = "value",
-                   values_fill = NA)
-  })
+
   
   
   
@@ -177,10 +137,7 @@ server <- function(input, output, session) {
     }
   )
   
-  
-  output$datelastupdated <- renderText ({
-    paste ("The data was last updated on 2020-11-07")
-  })
+
   
   
   observeEvent(input$login, {

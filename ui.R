@@ -83,7 +83,7 @@ ui_main_page <- dashboardPage(
       tabItem (tabName = "about",
                h2 ("About The Data"),
                p("Data is derived from daily, municipality-level case reports from Wayne County Health Department. Data represent cases confirmed for each date (i.e., cases are associated with the date of confirmation, not date of symptom onset or specimen collection)."),
-               HTML("<p>For COVID-19 indicators across the state of Michigan, visit the  <a href='https://www.mistartmap.info/?mdoc=0&probable=1'>MI Safe Start Map</a></p>"),   
+               HTML("<p>For COVID-19 indicators across the state of Michigan, visit the  <a href='https://www.mistartmap.info/?mdoc=0&probable=1'>MI Safe Start Map</a>.</p>"),   
                h2 ("Contact"),
                HTML ("<p>Contact <a href='https://ihpi.umich.edu/our-experts/emsomers'>Dr. Emily Somers</a> (emsomers@umich.edu) or Kaitlyn Akel (kbakel@umich.edu) for more information about the data used for the dashboard.")),
       tabItem (tabName = "help",
@@ -91,32 +91,13 @@ ui_main_page <- dashboardPage(
                p("Contact Chris Shin (shincd@umich.edu) for technical help related to the dashboard.")
       ),
       tabItem (tabName = "add_data",
-               fluidRow(
-                 box (width = 4,
-                      h3 ("Add Data Point Manually"),
-                      dateInput("newdate", 
-                                "Date:",
-                                min = latest_date + 1,
-                                value = latest_date + 1),
-                      numericInput ("newcasecountcanton", 
-                                    "Number of Cases in Canton:",
-                                    0),
-                      numericInput ("newcasecountplymouthcity", 
-                                    "Number of Cases in Plymouth City:",
-                                    0),
-                      numericInput ("newcasecountplymouthtownship", 
-                                    "Number of Cases in Plymouth Township:",
-                                    0),
-                      
-                      actionButton ("add_new_data_point", 
-                                    "Submit New Data Point"),
-                      verbatimTextOutput("see_new_values")),
-                 box (
-                   width = 8,
-                   h3("Current Data Set"),
-                   DT::dataTableOutput("available_points")))
+               
+               box (
+                 width = 8,
+                 HTML("<p>To add new data points, add them to the google sheet  <a href='https://docs.google.com/spreadsheets/d/1_BWCAtqFdap8giAtqvZLqVcmPj_MkXUt3Dnge4NGgyk/edit?usp=sharing'>here</a></p>")
+               )
+               
       )
-      
     )
   )
 )
