@@ -81,8 +81,7 @@ ui_main_page <- dashboardPage(
 
                       br(),
                       br(),
-                      downloadButton("downloadData", "Download Data Used to Generate Plot"),
-                      textOutput("datelastupdated")
+                      downloadButton("downloadData", "Download Data Used to Generate Plot")
                  ),
                  
                  box (

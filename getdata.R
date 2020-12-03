@@ -7,7 +7,7 @@ library (tidyr)
 # options(gargle_oauth_cache = ".secrets")
 
 drive_auth(cache = ".secrets", email = "shincd@umich.edu")
-sheets_auth(token = drive_token())
+gs4_auth(token = drive_token())
 
 
 
@@ -68,12 +68,21 @@ recalculate_incidences <- function (dat) {
     group_by (municipality) %>%
     arrange (date) %>%
     mutate (percent_increase_in_incidence = ifelse (value != 0 & dplyr::lag (value) != 0, round (((value - dplyr::lag (value))/dplyr::lag (value)) * 100, 2), 0),
-            is_3day_surge = ifelse (((percent_increase_in_incidence) > 10) & (dplyr::lag (percent_increase_in_incidence, 1) > 10) & (dplyr::lag (percent_increase_in_incidence, 2) > 10) |
-                                      ((percent_increase_in_incidence) > 10) & (dplyr::lag (percent_increase_in_incidence, 1) > 10) & (dplyr::lead (percent_increase_in_incidence, 1) > 10) |
-                                      ((percent_increase_in_incidence) > 10) & (dplyr::lead (percent_increase_in_incidence, 1) > 10) & (dplyr::lead (percent_increase_in_incidence, 2) > 10), 1, 0),
-            consecutive_percent_increase_in_incidence = paste0 (dplyr::lag (date, 2), ": ", dplyr::lag (percent_increase_in_incidence, 2), "%, ",
-                                                                dplyr::lag (date, 1), ": ", dplyr::lag (percent_increase_in_incidence, 1), "%, ",
-                                                                date, ": ", percent_increase_in_incidence, "%")) %>%
+            is_3day_surge = ifelse (((percent_increase_in_incidence) >= 10) & 
+                                      (dplyr::lag (percent_increase_in_incidence, 1) >= 10) & 
+                                      (dplyr::lag (percent_increase_in_incidence, 2) >= 10) |
+                                      ((percent_increase_in_incidence) >= 10) & 
+                                      (dplyr::lag (percent_increase_in_incidence, 1) >= 10) & 
+                                      (dplyr::lead (percent_increase_in_incidence, 1) >= 10) |
+                                      ((percent_increase_in_incidence) >= 10) & 
+                                      (dplyr::lead (percent_increase_in_incidence, 1) >= 10) & 
+                                      (dplyr::lead (percent_increase_in_incidence, 2) >= 10), 1, 0),
+            
+            
+            consecutive_percent_increase_in_incidence = paste0 (date, ": ", percent_increase_in_incidence, "%")
+            
+            
+    )%>%
     select (date, municipality, percent_increase_in_incidence, is_3day_surge, consecutive_percent_increase_in_incidence) %>%
     dplyr::left_join (dat, by = c("date", "municipality"))
   
@@ -83,38 +92,35 @@ recalculate_incidences <- function (dat) {
     group_by (municipality) %>%
     arrange (date) %>%
     mutate (increase_in_7day = ifelse (lag(value, 1) < value, 1, 0),
-      is_5day_surge = ifelse ((increase_in_7day == 1 &
-                                dplyr::lag (increase_in_7day) == 1 &
-                                dplyr::lag (increase_in_7day, 2)  == 1 &
-                                dplyr::lag (increase_in_7day, 3)  == 1 &
-                                dplyr::lag (increase_in_7day, 4)  == 1) |
-                                (increase_in_7day == 1 &
-                                   dplyr::lag (increase_in_7day) == 1 &
-                                   dplyr::lag (increase_in_7day, 2)  == 1 &
-                                   dplyr::lag (increase_in_7day, 3)  == 1 &
-                                   dplyr::lead (increase_in_7day, 1)  == 1) |
-                                (increase_in_7day == 1 &
-                                   dplyr::lag (increase_in_7day) == 1 &
-                                   dplyr::lag (increase_in_7day, 2)  == 1 &
-                                   dplyr::lead (increase_in_7day, 1)  == 1 &
-                                   dplyr::lead (increase_in_7day, 2)  == 1) |
-                                (increase_in_7day == 1 &
-                                   dplyr::lag (increase_in_7day) == 1 &
-                                   dplyr::lead (increase_in_7day, 1)  == 1 &
-                                   dplyr::lead (increase_in_7day, 2)  == 1 &
-                                   dplyr::lead (increase_in_7day, 3)  == 1) |
-                                (increase_in_7day == 1 &
-                                   dplyr::lead (increase_in_7day) == 1 &
-                                   dplyr::lead (increase_in_7day, 2)  == 1 &
-                                   dplyr::lead (increase_in_7day, 3)  == 1 &
-                                   dplyr::lead (increase_in_7day, 4)  == 1) , 1, 0),
-            consecutive_increase_in_7day = paste0 (dplyr::lag (date, 5), ": ", dplyr::lag (value, 5), ", ",
-                                                   dplyr::lag (date, 4), ": ", dplyr::lag (value, 4), ", ",
-                                                   dplyr::lag (date, 3), ": ", dplyr::lag (value, 3), ", ",
-                                                   dplyr::lag (date, 2), ": ", dplyr::lag (value, 2), ", ",
-                                                   dplyr::lag (date, 1), ": ", dplyr::lag (value, 1), ", ",
-                                                   date, ": ", value)
-                                                   ) %>%
+            is_5day_surge = ifelse ((increase_in_7day == 1 &
+                                       dplyr::lag (increase_in_7day) == 1 &
+                                       dplyr::lag (increase_in_7day, 2)  == 1 &
+                                       dplyr::lag (increase_in_7day, 3)  == 1 &
+                                       dplyr::lag (increase_in_7day, 4)  == 1) |
+                                      (increase_in_7day == 1 &
+                                         dplyr::lag (increase_in_7day) == 1 &
+                                         dplyr::lag (increase_in_7day, 2)  == 1 &
+                                         dplyr::lag (increase_in_7day, 3)  == 1 &
+                                         dplyr::lead (increase_in_7day, 1)  == 1) |
+                                      (increase_in_7day == 1 &
+                                         dplyr::lag (increase_in_7day) == 1 &
+                                         dplyr::lag (increase_in_7day, 2)  == 1 &
+                                         dplyr::lead (increase_in_7day, 1)  == 1 &
+                                         dplyr::lead (increase_in_7day, 2)  == 1) |
+                                      (increase_in_7day == 1 &
+                                         dplyr::lag (increase_in_7day) == 1 &
+                                         dplyr::lead (increase_in_7day, 1)  == 1 &
+                                         dplyr::lead (increase_in_7day, 2)  == 1 &
+                                         dplyr::lead (increase_in_7day, 3)  == 1) |
+                                      (increase_in_7day == 1 &
+                                         dplyr::lead (increase_in_7day) == 1 &
+                                         dplyr::lead (increase_in_7day, 2)  == 1 &
+                                         dplyr::lead (increase_in_7day, 3)  == 1 &
+                                         dplyr::lead (increase_in_7day, 4)  == 1) , 1, 0),
+            
+            
+            consecutive_increase_in_7day = paste0 (date, ": ", value)
+            ) %>%
     select (date, municipality, increase_in_7day, is_5day_surge, consecutive_increase_in_7day) %>%
     dplyr::left_join (dat, by = c("date", "municipality"))
   
@@ -128,7 +134,8 @@ denoms = readr::read_csv ("denominators.csv",
                           col_types = "cd")
 
 
-dat_cases_only <- read_sheet ("https://docs.google.com/spreadsheets/d/1_BWCAtqFdap8giAtqvZLqVcmPj_MkXUt3Dnge4NGgyk/edit#gid=0")
+dat_cases_only <- read_sheet ("https://docs.google.com/spreadsheets/d/1_BWCAtqFdap8giAtqvZLqVcmPj_MkXUt3Dnge4NGgyk/edit#gid=0",
+                              range = "Sheet1!A:D")
 
 dat_all = recalculate_incidences (dat_cases_only)
 

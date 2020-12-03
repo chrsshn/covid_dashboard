@@ -1,12 +1,12 @@
 name: covid_dashboard
 title: covid_dashboard
 username:
-account: chrsshn
+account: um-somerslab
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
-appId: 3238158
-bundleId: 3934063
-url: https://chrsshn.shinyapps.io/covid_dashboard/
-when: 1606930644.91403
+appId: 3341689
+bundleId: 3935577
+url: https://um-somerslab.shinyapps.io/covid_dashboard/
+when: 1606954235.87996
 asMultiple: FALSE
 asStatic: FALSE

@@ -2,6 +2,7 @@ library(shiny)
 library (dplyr)
 library (plotly)
 library (DT)
+library (stringr)
 
 
 
@@ -43,16 +44,15 @@ server <- function(input, output, session) {
       filter (is_3day_surge == 3)
     
     
-    if ("5 consecutive days of sustained increase in 7 day average incidence" %in% input$show_surge ) {
-      selected_5day_surge$a <- all_data_points$a %>%
+    if ("5 consecutive days of sustained increase in 7 day average incidence" %in% input$show_surge ) {      selected_5day_surge$a <- all_data_points$a %>%
         filter (date <= as.Date(input$daterange1[2]) & date >=as.Date(input$daterange1[1]),
                 as.character (municipality) %in% input$municipalitiesavailable,
                 is_5day_surge == 1,
                 measure == incidence_type)
     }
     else
-      selected_3day_surge$a <- all_data_points$a %>% 
-      filter (is_5day_surge == 3)
+      selected_5day_surge$a <- all_data_points$a %>% 
+      filter (is_5day_surge == 15)
     
   })
   
@@ -154,7 +154,7 @@ server <- function(input, output, session) {
                 type = "scatter",
                 mode = "markers",
                 hoverinfo = 'text',
-                text = ~paste0("Change in ",municipality, " Incidence: ", consecutive_percent_increase_in_incidence),
+                text = ~paste0("Change in ",municipality, " Incidence for ", consecutive_percent_increase_in_incidence),
                 opacity = .8,
                 marker = list (
                   color = "FEE12B",
@@ -167,7 +167,7 @@ server <- function(input, output, session) {
                 type = "scatter",
                 mode = "markers",
                 hoverinfo = 'text',
-                text = ~paste0("Consecutive Increases in 7 Day Incidence: ", consecutive_increase_in_7day),
+                text = ~paste0("7 Day Incidence for ", consecutive_increase_in_7day),
                 opacity = .8,
                 marker = list (
                   color = "FBB117",
@@ -189,7 +189,7 @@ server <- function(input, output, session) {
                             b = 90
               )
       ) %>%
-      config (modeBarButtonsToRemove = list ("toggleSpikelines",
+      config (modeBarButtonsToRemove = list (
                                              "select2d",
                                              "lasso2d"))
   })
@@ -203,7 +203,7 @@ server <- function(input, output, session) {
             sep = "")
     },
     content = function(file) {
-      todownload = as.data.frame(selected_data_points())%>% 
+      todownload = as.data.frame(selected_data_points$a)%>% 
         pivot_wider (
           id_cols = "date",
           names_from = "municipality",
@@ -214,10 +214,7 @@ server <- function(input, output, session) {
   )
   
   
-  output$datelastupdated <- renderText ({
-    paste ("The data was last updated on 2020-11-07")
-  })
-  
+
   
   observeEvent(input$login, {
     showModal(modalDialog(
